@@ -48,74 +48,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html>
 <head>
     <title>Modify Hospital</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; margin: 0; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .header a {
-            background: #6c757d;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            text-decoration: none;
-        }
-        .header a:hover { background: #5a6268; }
-        form { max-width: 500px; margin: auto; display: flex; flex-direction: column; gap: 12px; }
-        label { font-weight: bold; }
-        input {
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            width: 100%;
-        }
-        button {
-            background: #007BFF;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        button:hover { background: #0056b3; }
-        .error { color: red; text-align: center; margin-bottom: 10px; }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
+<body class="bg-light">
 
-<div class="header">
-    <a href="manage_hospital.php">⬅ Back</a>
-    <h2>Modify Hospital</h2>
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Modify Hospital</h2>
+        <a href="manage_hospital.php" class="btn btn-secondary"> Back</a>
+    </div>
+
+    <?php if (!empty($error)): ?>
+        <div class="alert alert-danger"><?php echo $error; ?></div>
+    <?php endif; ?>
+
+    <form method="post" class="card p-4 shadow-sm bg-white mx-auto" style="max-width:600px;">
+        <div class="mb-3">
+            <label class="form-label">Hospital ID</label>
+            <input type="text" class="form-control" value="<?php echo htmlspecialchars($hospital['HospitalID']); ?>" readonly>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-control" value="<?php echo htmlspecialchars($hospital['Name']); ?>" readonly>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Plot</label>
+            <input type="text" name="plot" class="form-control" value="<?php echo htmlspecialchars($hospital['Plot']); ?>" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Street</label>
+            <input type="text" name="street" class="form-control" value="<?php echo htmlspecialchars($hospital['Street']); ?>" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Area</label>
+            <input type="text" name="area" class="form-control" value="<?php echo htmlspecialchars($hospital['Area']); ?>" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" value="<?php echo htmlspecialchars($hospital['email']); ?>" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Phone</label>
+            <input type="text" name="phone" class="form-control" value="<?php echo htmlspecialchars($hospital['Phone']); ?>" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Update Hospital</button>
+    </form>
+
 </div>
 
-<?php if (!empty($error)) echo "<div class='error'>$error</div>"; ?>
-
-<form method="post">
-    <label>Hospital ID</label>
-    <input type="text" value="<?php echo htmlspecialchars($hospital['HospitalID']); ?>" readonly>
-
-    <label>Name</label>
-    <input type="text" value="<?php echo htmlspecialchars($hospital['Name']); ?>" readonly>
-
-    <label>Plot</label>
-    <input type="text" name="plot" value="<?php echo htmlspecialchars($hospital['Plot']); ?>" required>
-
-    <label>Street</label>
-    <input type="text" name="street" value="<?php echo htmlspecialchars($hospital['Street']); ?>" required>
-
-    <label>Area</label>
-    <input type="text" name="area" value="<?php echo htmlspecialchars($hospital['Area']); ?>" required>
-
-    <label>Email</label>
-    <input type="email" name="email" value="<?php echo htmlspecialchars($hospital['email']); ?>" required>
-
-    <label>Phone</label>
-    <input type="text" name="phone" value="<?php echo htmlspecialchars($hospital['Phone']); ?>" required>
-
-    <button type="submit">Change</button>
-</form>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

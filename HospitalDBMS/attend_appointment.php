@@ -2,12 +2,14 @@
 session_start();
 include "dbconnect.php";
 
+// Ensure doctor login
 if (!isset($_SESSION['pid']) || $_SESSION['role'] != "doctor") {
     header("Location: login.php");
     exit;
 }
 
 $pid = $_SESSION['pid'];
+$message = "";
 
 // Validate app_id from GET
 if (!isset($_GET['app_id'])) {
@@ -15,7 +17,6 @@ if (!isset($_GET['app_id'])) {
     exit;
 }
 $app_id = $_GET['app_id'];
-$message = "";
 
 // Fetch appointment + patient info
 $stmt = $conn->prepare("
@@ -40,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
     $diagnoses = [];
     $prescriptions = [];
 
-    // Collect all diagnoses
+    // Collect diagnoses
     for ($i = 1; $i <= 5; $i++) {
         $field = "diagnosis$i";
         if (!empty($_POST[$field])) {
@@ -48,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
         }
     }
 
-    // Collect all prescriptions
+    // Collect prescriptions
     for ($i = 1; $i <= 8; $i++) {
         $field = "prescription$i";
         if (!empty($_POST[$field])) {
@@ -96,35 +97,33 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
         $message = "Error: " . $e->getMessage();
     }
 }
-
 ?>
 <!DOCTYPE html>
 <html>
 <head>
     <title>Attend Appointment</title>
-    <link rel="stylesheet" href="css/bootstrap.min.css">
-    <style>
-        .container { max-width: 900px; }
-        .form-label { font-weight: bold; }
-        .btn-group { margin-top: 15px; }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body class="p-4">
+<body class="bg-light p-4">
 <div class="container">
 
-    <h2>Attend Appointment</h2>
+    <h2 class="mb-4">Attend Appointment</h2>
     <a href="doctor.php" class="btn btn-secondary mb-3">Back</a>
 
-    <?php if ($message) echo "<div class='alert alert-danger'>$message</div>"; ?>
+    <?php if ($message): ?>
+        <div class="alert alert-danger"><?php echo $message; ?></div>
+    <?php endif; ?>
 
     <h4>Patient Information</h4>
-    <table class="table table-bordered w-50">
+    <table class="table table-bordered w-50 mb-4">
         <tr><th>Name</th><td><?php echo htmlspecialchars($appointment['Name']); ?></td></tr>
         <tr><th>Date of Birth</th><td><?php echo htmlspecialchars($appointment['DateofBirth']); ?></td></tr>
         <tr><th>Blood Group</th><td><?php echo htmlspecialchars($appointment['BloodGroup']); ?></td></tr>
         <tr>
             <th>Medical History</th>
-            <td><a href="medical_history.php?patient_id=<?php echo $appointment['PatientID']; ?>" class="btn btn-info btn-sm">View</a></td>
+            <td>
+                <a href="medical_history.php?patient_id=<?php echo $appointment['PatientID']; ?>" class="btn btn-info btn-sm">View</a>
+            </td>
         </tr>
     </table>
 
@@ -145,12 +144,12 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
             </div>
         <?php endfor; ?>
 
-        <div class="btn-group">
+        <div class="mt-3">
             <button type="submit" class="btn btn-success">Complete Appointment</button>
         </div>
     </form>
 
 </div>
-<script src="js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

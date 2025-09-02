@@ -2,6 +2,7 @@
 session_start();
 include "dbconnect.php";
 
+// Ensure logged in as doctor
 if (!isset($_SESSION['pid']) || $_SESSION['role'] != "doctor") {
     header("Location: login.php");
     exit;
@@ -10,20 +11,20 @@ if (!isset($_SESSION['pid']) || $_SESSION['role'] != "doctor") {
 $pid = $_SESSION['pid'];
 $message = "";
 
-// ✅ Handle cancel appointment request
+// Handle cancel appointment request
 if (isset($_GET['cancel'])) {
     $app_id = $_GET['cancel'];
     $stmt = $conn->prepare("UPDATE appointment SET Status='Cancelled' WHERE App_ID=? AND Doctor_ID=? AND Status='Upcoming'");
     $stmt->bind_param("ss", $app_id, $pid);
     if ($stmt->execute()) {
-        $message = "✅ Appointment cancelled successfully.";
+        $message = "Appointment cancelled successfully.";
     } else {
-        $message = "❌ Failed to cancel appointment.";
+        $message = "Failed to cancel appointment.";
     }
     $stmt->close();
 }
 
-// ✅ Get doctor's personal info
+// Get doctor's personal info
 $stmt = $conn->prepare("SELECT p.Name, p.DateofBirth, p.email, p.Phone, d.Specialization, GROUP_CONCAT(dd.Degrees SEPARATOR ', ') AS Degrees
                         FROM doctor d
                         JOIN person p ON d.PID=p.PID
@@ -34,7 +35,7 @@ $stmt->execute();
 $doctor_info = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
-// ✅ Get upcoming appointments
+// Get upcoming appointments
 $stmt = $conn->prepare("SELECT a.App_ID, a.Date, a.Time, pa.PID as PatientID, p.Name as PatientName
                         FROM appointment a
                         JOIN patient pa ON a.Patient_ID=pa.PID
@@ -50,22 +51,22 @@ $stmt->close();
 <html>
 <head>
     <title>Doctor Dashboard</title>
-    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .action-btn { margin-right: 5px; }
         .msg { margin: 15px 0; font-weight: bold; }
     </style>
 </head>
-<body class="p-4">
+<body class="bg-light p-4">
 <div class="container">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Welcome Dr. <?php echo htmlspecialchars($doctor_info['Name']); ?></h1>
-        <a href="logout.php" class="btn btn-danger">Logout</a>
+        <a href="logout.php" class="btn btn-primary">Logout</a>
     </div>
 
     <?php if($message != ""): ?>
-        <div class="msg"><?php echo $message; ?></div>
+        <div class="alert alert-primary"><?php echo $message; ?></div>
     <?php endif; ?>
 
     <h2>Doctor Information</h2>
@@ -97,9 +98,9 @@ $stmt->close();
                 <td><?php echo $row['Time']; ?></td>
                 <td><?php echo htmlspecialchars($row['PatientName']); ?></td>
                 <td>
-                    <a href="attend_appointment.php?app_id=<?php echo $row['App_ID']; ?>" class="btn btn-success btn-sm action-btn">Attend</a>
-                    <a href="reschedule_appointment.php?app_id=<?php echo $row['App_ID']; ?>" class="btn btn-warning btn-sm action-btn">Reschedule</a>
-                    <a href="?cancel=<?php echo $row['App_ID']; ?>" onclick="return confirm('Cancel this appointment?');" class="btn btn-danger btn-sm action-btn">Cancel</a>
+                    <a href="attend_appointment.php?app_id=<?php echo $row['App_ID']; ?>" class="btn btn-primary btn-sm action-btn">Attend</a>
+                    <a href="reschedule_appointment.php?app_id=<?php echo $row['App_ID']; ?>" class="btn btn-primary btn-sm action-btn">Reschedule</a>
+                    <a href="?cancel=<?php echo $row['App_ID']; ?>" onclick="return confirm('Cancel this appointment?');" class="btn btn-primary btn-sm action-btn">Cancel</a>
                 </td>
             </tr>
         <?php endwhile; ?>
@@ -107,7 +108,6 @@ $stmt->close();
     </table>
 
 </div>
-
-<script src="js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

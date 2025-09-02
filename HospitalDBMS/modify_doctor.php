@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $phone = $_POST['phone'];
     $password = $_POST['password'];
     $shift = $_POST['shift'];
-    $new_degrees = $_POST['degrees']; // array
+    $degrees_input = $_POST['degrees']; // comma-separated
 
     // Validate shift
     if($shift !== "Morning" && $shift !== "Evening"){
@@ -57,12 +57,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Update degrees: remove old and insert new
     $conn->query("DELETE FROM doctordegree WHERE PID='$pid'");
     $insert_degree = $conn->prepare("INSERT INTO doctordegree (PID, Degrees) VALUES (?, ?)");
-    foreach($new_degrees as $deg){
-        $insert_degree->bind_param("ss", $pid, $deg);
-        $insert_degree->execute();
+    $deg_array = array_map('trim', explode(',', $degrees_input));
+    foreach($deg_array as $deg){
+        if(!empty($deg)){
+            $insert_degree->bind_param("ss", $pid, $deg);
+            $insert_degree->execute();
+        }
     }
 
-    echo "<p style='color:green;'>Doctor info updated successfully!</p>";
+    $message = "Doctor info updated successfully!";
     // Refresh doctor info
     header("Refresh:0");
 }
@@ -72,45 +75,75 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html>
 <head>
     <title>Modify Doctor</title>
-     <a href="staff.php">⬅ Back</a>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
+<body class="bg-light">
 
-    <h2>Modify Doctor Info</h2>
-    <div style="display:flex; gap:50px;">
-        <!-- Previous info -->
-        <div>
-            <h3>Current Info</h3>
-            <p><strong>Name:</strong> <?= $doctor['Name'] ?></p>
-            <p><strong>Email:</strong> <?= $doctor['email'] ?></p>
-            <p><strong>Phone:</strong> <?= $doctor['Phone'] ?></p>
-            <p><strong>Shift:</strong> <?= $doctor['shift'] ?></p>
-            <p><strong>Specialization:</strong> <?= $doctor['Specialization'] ?></p>
-            <p><strong>Degrees:</strong> <?= implode(", ", $degrees) ?></p>
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Modify Doctor Info</h2>
+        <a href="staff.php" class="btn btn-secondary"> Back</a>
+    </div>
+
+    <?php if(!empty($message)): ?>
+        <div class="alert alert-success"><?php echo $message; ?></div>
+    <?php endif; ?>
+
+    <div class="row g-4">
+        <!-- Current Info -->
+        <div class="col-md-5">
+            <div class="card p-3 shadow-sm bg-white">
+                <h4>Current Info</h4>
+                <p><strong>Name:</strong> <?= htmlspecialchars($doctor['Name']) ?></p>
+                <p><strong>Email:</strong> <?= htmlspecialchars($doctor['email']) ?></p>
+                <p><strong>Phone:</strong> <?= htmlspecialchars($doctor['Phone']) ?></p>
+                <p><strong>Shift:</strong> <?= htmlspecialchars($doctor['shift']) ?></p>
+                <p><strong>Specialization:</strong> <?= htmlspecialchars($doctor['Specialization']) ?></p>
+                <p><strong>Degrees:</strong> <?= htmlspecialchars(implode(", ", $degrees)) ?></p>
+            </div>
         </div>
 
-        <!-- Form to modify -->
-        <form method="post">
-            <label>Email:</label><br>
-            <input type="email" name="email" value="<?= $doctor['email'] ?>" required><br><br>
+        <!-- Modify Form -->
+        <div class="col-md-7">
+            <div class="card p-4 shadow-sm bg-white">
+                <form method="post">
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" value="<?= htmlspecialchars($doctor['email']) ?>" required>
+                    </div>
 
-            <label>Phone:</label><br>
-            <input type="text" name="phone" value="<?= $doctor['Phone'] ?>" required><br><br>
+                    <div class="mb-3">
+                        <label class="form-label">Phone</label>
+                        <input type="text" name="phone" class="form-control" value="<?= htmlspecialchars($doctor['Phone']) ?>" required>
+                    </div>
 
-            <label>Password:</label><br>
-            <input type="text" name="password" value="<?= $doctor['password'] ?>" required><br><br>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="text" name="password" class="form-control" value="<?= htmlspecialchars($doctor['password']) ?>" required>
+                    </div>
 
-            <label>Shift:</label><br>
-            <select name="shift" required>
-                <option value="Morning" <?= $doctor['shift']=="Morning"?"selected":"" ?>>Morning</option>
-                <option value="Evening" <?= $doctor['shift']=="Evening"?"selected":"" ?>>Evening</option>
-            </select><br><br>
+                    <div class="mb-3">
+                        <label class="form-label">Shift</label>
+                        <select name="shift" class="form-select" required>
+                            <option value="Morning" <?= $doctor['shift']=="Morning"?"selected":"" ?>>Morning</option>
+                            <option value="Evening" <?= $doctor['shift']=="Evening"?"selected":"" ?>>Evening</option>
+                        </select>
+                    </div>
 
-            <label>Degrees (separate by comma):</label><br>
-            <input type="text" name="degrees[]" value="<?= implode(",", $degrees) ?>"><br><br>
+                    <div class="mb-3">
+                        <label class="form-label">Degrees (comma separated)</label>
+                        <input type="text" name="degrees" class="form-control" value="<?= htmlspecialchars(implode(", ", $degrees)) ?>">
+                    </div>
 
-            <button type="submit">Update Doctor</button>
-        </form>
+                    <button type="submit" class="btn btn-primary w-100">Update Doctor</button>
+                </form>
+            </div>
+        </div>
     </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

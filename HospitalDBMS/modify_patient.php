@@ -32,55 +32,40 @@ $result = $stmt->get_result();
 $patient = $result->fetch_assoc();
 $stmt->close();
 ?>
+
 <!DOCTYPE html>
 <html>
 <head>
     <title>Modify Personal Info</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f6fa; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .back-btn {
-            background: #6c757d; color: white; padding: 8px 12px;
-            border-radius: 6px; text-decoration: none;
-        }
-        .back-btn:hover { background: #5a6268; }
-        .card {
-            background: white; padding: 20px; border-radius: 8px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1); max-width: 400px;
-            margin: auto;
-        }
-        h3 { margin-top: 0; }
-        label { display: block; margin-top: 10px; }
-        input[type="text"], input[type="email"] {
-            width: 100%; padding: 8px; margin-top: 5px;
-            border: 1px solid #ccc; border-radius: 4px;
-        }
-        button {
-            margin-top: 15px; padding: 10px 15px;
-            background: #007BFF; color: white; border: none;
-            border-radius: 6px; cursor: pointer;
-        }
-        button:hover { background: #0056b3; }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
+<body class="bg-light">
 
-<div class="header">
-    <a href="patient.php" class="back-btn">← Back</a>
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Update Contact Information</h2>
+        <a href="patient.php" class="btn btn-secondary"> Back</a>
+    </div>
+
+    <div class="card p-4 shadow-sm mx-auto" style="max-width: 500px;">
+        <form method="POST">
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control" value="<?php echo htmlspecialchars($patient['email']); ?>" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Phone</label>
+                <input type="text" name="phone" class="form-control" value="<?php echo htmlspecialchars($patient['Phone']); ?>" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Save</button>
+        </form>
+    </div>
+
 </div>
 
-<div class="card">
-    <h3>Update Contact Information</h3>
-    <form method="POST">
-        <label>Email:</label>
-        <input type="email" name="email" value="<?php echo htmlspecialchars($patient['email']); ?>" required>
-
-        <label>Phone:</label>
-        <input type="text" name="phone" value="<?php echo htmlspecialchars($patient['Phone']); ?>" required>
-
-        <button type="submit">Save</button>
-    </form>
-</div>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

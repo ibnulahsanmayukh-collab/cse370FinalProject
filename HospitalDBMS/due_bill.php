@@ -2,7 +2,6 @@
 session_start();
 include "dbconnect.php";
 
-// ✅ Ensure patient login
 if (!isset($_SESSION['pid']) || $_SESSION['role'] != "patient") {
     header("Location: login.php");
     exit();
@@ -39,7 +38,6 @@ try {
             FROM bill b
             JOIN appointment a ON b.App_ID = a.App_ID
             JOIN doctor d ON a.Doctor_ID = d.PID
-            JOIN doctordegree dd ON d.PID = dd.PID
             JOIN patient p ON a.Patient_ID = p.PID
             WHERE a.Patient_ID = ?
             GROUP BY b.Bill_ID";
@@ -70,7 +68,7 @@ try {
         $diagnosis_fee = $diag_count * 100;
 
         $total_before_insurance = $doctor_fee + $diagnosis_fee;
-        $total_after_insurance = $hasInsurance ? $total_before_insurance * 0.75 : $total_before_insurance;
+        $total_after_insurance = $hasInsurance ? $total_before_insurance * 0.75 : null; // null if no insurance
 
         $row['DoctorFee'] = $doctor_fee;
         $row['DiagnosisFee'] = $diagnosis_fee;
@@ -86,68 +84,75 @@ try {
     die("Failed to fetch bills: " . $e->getMessage());
 }
 ?>
-
 <!DOCTYPE html>
 <html>
 <head>
     <title>Due Bills</title>
-    <style>
-        body { font-family: Arial, sans-serif; }
-        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-        th { background-color: #f2f2f2; }
-        .btn { padding: 5px 10px; text-decoration: none; background: #28a745; color: white; border-radius: 5px; }
-        .btn:hover { background: #218838; }
-        .buttons { margin: 15px 0; }
-        .buttons a { margin-right: 10px; padding: 8px 12px; text-decoration: none; background: #007BFF; color: white; border-radius: 5px; }
-        .buttons a:hover { background: #0056b3; }
-        .message { margin: 10px 0; padding: 10px; background: #d4edda; color: #155724; border-radius: 5px; }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
+<body class="bg-light p-4">
 
-<h2>Due Bills</h2>
+<div class="container">
 
-<div class="buttons">
-    <a href="patient.php">Back</a>
-    <a href="logout.php">Logout</a>
+    <h2>Due Bills</h2>
+
+    <div class="mb-3">
+        <a href="patient.php" class="btn btn-primary me-2">Back</a>
+        <a href="logout.php" class="btn btn-primary">Logout</a>
+    </div>
+
+    <?php if($message): ?>
+        <div class="alert alert-primary"><?php echo $message; ?></div>
+    <?php endif; ?>
+
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Bill ID</th>
+                <th>Appointment ID</th>
+                <th>Appointment Date</th>
+                <th>Doctor Fee</th>
+                <th>Diagnosis Fee</th>
+                <th>Total Before Insurance</th>
+                <th>Total After Insurance</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php foreach ($bill_data as $bill): ?>
+            <tr>
+                <td><?php echo $bill['Bill_ID']; ?></td>
+                <td><?php echo $bill['App_ID']; ?></td>
+                <td><?php echo $bill['Date']; ?></td>
+                <td><?php echo number_format($bill['DoctorFee'], 2); ?></td>
+                <td><?php echo number_format($bill['DiagnosisFee'], 2); ?></td>
+                <td><?php echo number_format($bill['TotalBeforeInsurance'], 2); ?></td>
+                <td>
+                    <?php 
+                        echo $bill['TotalAfterInsurance'] !== null 
+                             ? number_format($bill['TotalAfterInsurance'], 2) 
+                             : "N/A"; 
+                    ?>
+                </td>
+                <td><?php echo $bill['Status']; ?></td>
+                <td>
+                    <?php if (strtolower($bill['Status']) == 'unpaid'): ?>
+                        <form method="POST" style="margin:0;">
+                            <input type="hidden" name="bill_id" value="<?php echo $bill['Bill_ID']; ?>">
+                            <button class="btn btn-primary btn-sm" type="submit" name="pay_bill">Pay Bill</button>
+                        </form>
+                    <?php else: ?>
+                        -
+                    <?php endif; ?>
+                </td>
+            </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+
 </div>
 
-<?php if($message) echo "<div class='message'>{$message}</div>"; ?>
-
-<table>
-    <tr>
-        <th>Bill ID</th>
-        <th>Appointment ID</th>
-        <th>Appointment Date</th>
-        <th>Doctor Fee</th>
-        <th>Diagnosis Fee</th>
-        <th>Total Before Insurance</th>
-        <th>Total After Insurance</th>
-        <th>Status</th>
-        <th>Action</th>
-    </tr>
-    <?php foreach ($bill_data as $bill) { ?>
-        <tr>
-            <td><?php echo $bill['Bill_ID']; ?></td>
-            <td><?php echo $bill['App_ID']; ?></td>
-            <td><?php echo $bill['Date']; ?></td>
-            <td><?php echo number_format($bill['DoctorFee'], 2); ?></td>
-            <td><?php echo number_format($bill['DiagnosisFee'], 2); ?></td>
-            <td><?php echo number_format($bill['TotalBeforeInsurance'], 2); ?></td>
-            <td><?php echo number_format($bill['TotalAfterInsurance'], 2); ?></td>
-            <td><?php echo $bill['Status']; ?></td>
-            <td>
-                <?php if (strtolower($bill['Status']) == 'unpaid') { ?>
-                    <form method="POST" style="margin:0;">
-                        <input type="hidden" name="bill_id" value="<?php echo $bill['Bill_ID']; ?>">
-                        <button class="btn" type="submit" name="pay_bill">Pay Bill</button>
-                    </form>
-                <?php } else { echo "-"; } ?>
-            </td>
-        </tr>
-    <?php } ?>
-</table>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

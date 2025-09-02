@@ -1,8 +1,6 @@
-
-
-
 <?php
 include "dbconnect.php";
+
 if (isset($_POST['register'])) {
 
     $name = trim($_POST['name']);
@@ -19,7 +17,6 @@ if (isset($_POST['register'])) {
     $next_num = $row['max_pid'] ? $row['max_pid'] + 1 : 1;
     $pid = "P" . str_pad($next_num, 9, '0', STR_PAD_LEFT); // P000000001, P000000002, etc.
 
-    // Start transaction
     $conn->begin_transaction();
 
     try {
@@ -33,35 +30,21 @@ if (isset($_POST['register'])) {
         $stmt2->bind_param("ssi", $pid, $blood, $insurance);
         $stmt2->execute();
 
-        // Commit transaction
         $conn->commit();
 
-        echo "<div class='container mt-5'>
-                <div class='alert alert-success'>
-                  Registration successful! Your Patient ID is <b>$pid</b>. 
-                  <a href='login.php' class='btn btn-sm btn-primary ms-2'>Login</a>
-                </div>
-              </div>";
+        $success = "Registration successful! Your Patient ID is <b>$pid</b>.";
 
     } catch (Exception $e) {
         $conn->rollback();
-        echo "<div class='container mt-5'>
-                <div class='alert alert-danger'>
-                  Registration failed: " . $e->getMessage() . "
-                </div>
-              </div>";
+        $error = "Registration failed: " . $e->getMessage();
     }
-
-    exit;
 }
 ?>
-
-
 <!DOCTYPE html>
 <html>
 <head>
     <title>Patient Registration</title>
-    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
 
@@ -71,6 +54,15 @@ if (isset($_POST['register'])) {
       <div class="card shadow-lg">
         <div class="card-body">
           <h3 class="card-title text-center mb-4">Patient Registration</h3>
+
+          <?php if (!empty($success)) : ?>
+              <div class="alert alert-success">
+                  <?php echo $success; ?>
+                  <a href="login.php" class="btn btn-sm btn-primary ms-2">Login</a>
+              </div>
+          <?php elseif (!empty($error)) : ?>
+              <div class="alert alert-danger"><?php echo $error; ?></div>
+          <?php endif; ?>
 
           <form method="post">
             <div class="mb-3">
@@ -120,6 +112,6 @@ if (isset($_POST['register'])) {
   </div>
 </div>
 
-<script src="js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -2,7 +2,7 @@
 session_start();
 include "dbconnect.php";
 
-// ✅ Ensure patient login
+// Ensure patient login
 if (!isset($_SESSION['pid']) || $_SESSION['role'] != "patient") {
     header("Location: login.php");
     exit();
@@ -11,7 +11,7 @@ if (!isset($_SESSION['pid']) || $_SESSION['role'] != "patient") {
 $pid = $_SESSION['pid'];
 $message = "";
 
-// ✅ Get appointment ID from GET
+// Get appointment ID from GET
 if (!isset($_GET['app_id'])) {
     header("Location: appointment_manage.php");
     exit();
@@ -40,20 +40,19 @@ if ($appointment['Date'] <= $today) {
     die("Cannot update appointment scheduled for today or past.");
 }
 
-// ✅ Handle form submit
+// Handle form submit
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['date'], $_POST['time'])) {
     $new_date = $_POST['date'];
     $new_time = $_POST['time'];
 
-    // Constraint: no same-day or past appointments
     if ($new_date <= $today) {
-        $message = "❌ Cannot set appointment for today or past.";
+        $message = "Cannot set appointment for today or past.";
     } elseif (date('N', strtotime($new_date)) == 5) { // No Friday
-        $message = "❌ Appointments are not allowed on Fridays.";
+        $message = "Appointments are not allowed on Fridays.";
     } else {
         $conn->begin_transaction();
         try {
-            // Check conflicts: doctor busy?
+            // Check doctor conflict
             $stmt = $conn->prepare("SELECT 1 FROM appointment 
                                     WHERE Doctor_ID=? AND Date=? AND Time=? AND Status='Upcoming' AND App_ID<>?");
             $stmt->bind_param("ssss", $appointment['Doctor_ID'], $new_date, $new_time, $app_id);
@@ -61,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['date'], $_POST['time']
             $doc_conflict = $stmt->get_result()->num_rows > 0;
             $stmt->close();
 
-            // Check conflicts: patient busy?
+            // Check patient conflict
             $stmt = $conn->prepare("SELECT 1 FROM appointment 
                                     WHERE Patient_ID=? AND Date=? AND Time=? AND Status='Upcoming' AND App_ID<>?");
             $stmt->bind_param("ssss", $pid, $new_date, $new_time, $app_id);
@@ -70,21 +69,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['date'], $_POST['time']
             $stmt->close();
 
             if ($doc_conflict || $pat_conflict) {
-                $message = "❌ Conflict: Either doctor or patient already has an appointment at this time.";
+                $message = "Conflict: Either doctor or patient already has an appointment at this time.";
                 $conn->rollback();
             } else {
-                // ✅ Update appointment
+                // Update appointment
                 $stmt = $conn->prepare("UPDATE appointment SET Date=?, Time=? WHERE App_ID=? AND Patient_ID=? AND Status='Upcoming'");
                 $stmt->bind_param("ssss", $new_date, $new_time, $app_id, $pid);
                 $stmt->execute();
                 $stmt->close();
 
                 $conn->commit();
-                $message = "✅ Appointment updated successfully!";
+                $message = "Appointment updated successfully!";
             }
         } catch (Exception $e) {
             $conn->rollback();
-            $message = "❌ Failed to update: " . $e->getMessage();
+            $message = "Failed to update: " . $e->getMessage();
         }
     }
 }
@@ -94,58 +93,58 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['date'], $_POST['time']
 <html>
 <head>
     <title>Update Appointment</title>
-    <style>
-        body { font-family: Arial, sans-serif; }
-        form { margin: 20px 0; }
-        label { display: block; margin-top: 10px; }
-        input[type=date], select { padding: 6px; margin-top: 5px; }
-        .buttons a { margin-right: 10px; padding: 8px 12px; text-decoration: none; background: #007BFF; color: white; border-radius: 5px; }
-        .buttons a:hover { background: #0056b3; }
-        .msg { margin: 15px 0; font-weight: bold; }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
+<body class="bg-light">
 
-<h2>Update Appointment</h2>
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Update Appointment</h2>
+        <div>
+            <a href="appointment_manage.php" class="btn btn-secondary me-2">Back</a>
+            <a href="logout.php" class="btn btn-danger">Logout</a>
+        </div>
+    </div>
 
-<div class="buttons">
-    <a href="appointment_manage.php">Back</a>
-    <a href="logout.php">Logout</a>
+    <?php if ($message != ""): ?>
+        <div class="alert alert-info"><?php echo htmlspecialchars($message); ?></div>
+    <?php endif; ?>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <p><strong>Doctor:</strong> <?php echo htmlspecialchars($appointment['Doctor_ID']); ?> (<?php echo htmlspecialchars($appointment['Specialization']); ?>)</p>
+            <p><strong>Hospital Area:</strong> <?php echo htmlspecialchars($appointment['Area']); ?> | <strong>Shift:</strong> <?php echo htmlspecialchars($appointment['shift']); ?></p>
+
+            <form method="POST">
+                <div class="mb-3">
+                    <label for="date" class="form-label">Select New Date:</label>
+                    <input type="date" class="form-control" name="date" value="<?php echo htmlspecialchars($appointment['Date']); ?>" min="<?php echo date("Y-m-d", strtotime("+1 day")); ?>" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="time" class="form-label">Select New Time:</label>
+                    <select class="form-select" name="time" required>
+                        <option value="">-- Select --</option>
+                        <?php
+                        $shift = $appointment['shift'];
+                        $hours = ($shift=="Morning") ? range(9,14) : range(15,20);
+                        foreach ($hours as $h) {
+                            foreach (["00","30"] as $m) {
+                                $t = sprintf("%02d:%s:00", $h, $m);
+                                $selected = ($t==$appointment['Time']) ? "selected" : "";
+                                echo "<option value='$t' $selected>$t</option>";
+                            }
+                        }
+                        ?>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-success">Update Appointment</button>
+            </form>
+        </div>
+    </div>
 </div>
 
-<?php if ($message != "") { echo "<p class='msg'>$message</p>"; } ?>
-
-<form method="POST">
-    <p>Doctor: <?php echo $appointment['Doctor_ID']; ?> (<?php echo $appointment['Specialization']; ?>)</p>
-    <p>Hospital Area: <?php echo $appointment['Area']; ?> | Shift: <?php echo $appointment['shift']; ?></p>
-
-    <label for="date">Select New Date:</label>
-    <input type="date" name="date" value="<?php echo $appointment['Date']; ?>" min="<?php echo date("Y-m-d", strtotime("+1 day")); ?>">
-
-    <label for="time">Select New Time:</label>
-    <select name="time">
-        <option value="">-- Select --</option>
-        <?php
-        $shift = $appointment['shift'];
-        if ($shift=="Morning") {
-            for ($h=9; $h<15; $h++) foreach (["00","30"] as $m) {
-                $t = sprintf("%02d:%s:00", $h, $m);
-                $selected = ($t==$appointment['Time']) ? "selected" : "";
-                echo "<option value='$t' $selected>$t</option>";
-            }
-        } else {
-            for ($h=15; $h<21; $h++) foreach (["00","30"] as $m) {
-                $t = sprintf("%02d:%s:00", $h, $m);
-                $selected = ($t==$appointment['Time']) ? "selected" : "";
-                echo "<option value='$t' $selected>$t</option>";
-            }
-        }
-        ?>
-    </select>
-
-    <br><br>
-    <input type="submit" value="Update Appointment">
-</form>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

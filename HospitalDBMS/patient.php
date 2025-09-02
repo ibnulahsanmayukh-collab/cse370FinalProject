@@ -20,9 +20,7 @@ $stmt = $conn->prepare("
 $stmt->bind_param("s", $patient_id);
 $stmt->execute();
 $result = $stmt->get_result();
-if (!$patient = $result->fetch_assoc()) {
-    die("Patient not found.");
-}
+if (!$patient = $result->fetch_assoc()) die("Patient not found.");
 $stmt->close();
 
 // Fetch upcoming appointments
@@ -47,85 +45,75 @@ $stmt->close();
 <html>
 <head>
     <title>Patient Dashboard</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f6fa; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .header h2 { margin: 0; }
-        .logout-btn {
-            background: #dc3545; color: white; padding: 8px 12px;
-            border-radius: 6px; text-decoration: none;
-        }
-        .logout-btn:hover { background: #c82333; }
-        .card {
-            background: white; padding: 15px; border-radius: 8px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-bottom: 20px;
-        }
-        .card h3 { margin-top: 0; }
-        .buttons { display: flex; gap: 10px; margin-top: 10px; }
-        .buttons a {
-            background: #007BFF; color: white; padding: 10px 14px;
-            border-radius: 6px; text-decoration: none;
-        }
-        .buttons a:hover { background: #0056b3; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td {
-            border: 1px solid #ddd; padding: 8px; text-align: left;
-        }
-        th { background: #007BFF; color: white; }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
+<body class="bg-light">
 
-<div class="header">
-    <h2>Welcome, <?php echo htmlspecialchars($patient['Name']); ?></h2>
-    <a href="logout.php" class="logout-btn">Logout</a>
-</div>
+<div class="container py-4">
 
-<div class="card">
-    <h3>Patient Information</h3>
-    <p><b>Patient ID:</b> <?php echo htmlspecialchars($patient['PID']); ?></p>
-    <p><b>Date of Birth:</b> <?php echo htmlspecialchars($patient['DateofBirth']); ?></p>
-    <p><b>Email:</b> <?php echo htmlspecialchars($patient['email']); ?></p>
-    <p><b>Phone:</b> <?php echo htmlspecialchars($patient['Phone']); ?></p>
-    <p><b>Blood Group:</b> <?php echo htmlspecialchars($patient['BloodGroup']); ?></p>
-    <p><b>Insurance:</b> <?php echo $patient['HasInsurance'] ? "Yes" : "No"; ?></p>
-
-    <div class="buttons">
-        <a href="appointment_manage.php">Manage Appointments</a>
-        <a href="due_bill.php">View Due Bills</a>
-        <a href="modify_patient.php">Update Personal Info</a>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Welcome, <?php echo htmlspecialchars($patient['Name']); ?></h2>
+        <a href="logout.php" class="btn btn-danger">Logout</a>
     </div>
+
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h4 class="card-title">Patient Information</h4>
+            <p><b>Patient ID:</b> <?php echo htmlspecialchars($patient['PID']); ?></p>
+            <p><b>Date of Birth:</b> <?php echo htmlspecialchars($patient['DateofBirth']); ?></p>
+            <p><b>Email:</b> <?php echo htmlspecialchars($patient['email']); ?></p>
+            <p><b>Phone:</b> <?php echo htmlspecialchars($patient['Phone']); ?></p>
+            <p><b>Blood Group:</b> <?php echo htmlspecialchars($patient['BloodGroup']); ?></p>
+            <p><b>Insurance:</b> <?php echo $patient['HasInsurance'] ? "Yes" : "No"; ?></p>
+
+            <div class="mt-3 d-flex gap-2 flex-wrap">
+                <a href="appointment_manage.php" class="btn btn-primary">Manage Appointments</a>
+                <a href="due_bill.php" class="btn btn-primary">View Due Bills</a>
+                <a href="modify_patient.php" class="btn btn-primary">Update Personal Info</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h4 class="card-title">Upcoming Appointments</h4>
+            <?php if ($appointments->num_rows > 0): ?>
+                <div class="table-responsive">
+                    <table class="table table-bordered mt-3">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Doctor</th>
+                                <th>Specialization</th>
+                                <th>Phone</th>
+                                <th>Hospital</th>
+                                <th>Address</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <?php while ($app = $appointments->fetch_assoc()): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($app['Date']); ?></td>
+                                <td><?php echo htmlspecialchars(substr($app['Time'],0,5)); ?></td>
+                                <td><?php echo htmlspecialchars($app['DoctorName']); ?></td>
+                                <td><?php echo htmlspecialchars($app['Specialization']); ?></td>
+                                <td><?php echo htmlspecialchars($app['DoctorPhone']); ?></td>
+                                <td><?php echo htmlspecialchars($app['HospitalName']); ?></td>
+                                <td><?php echo htmlspecialchars($app['HospitalAddress']); ?></td>
+                            </tr>
+                        <?php endwhile; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php else: ?>
+                <p class="mt-3">No upcoming appointments found.</p>
+            <?php endif; ?>
+        </div>
+    </div>
+
 </div>
 
-<div class="card">
-    <h3>Upcoming Appointments</h3>
-    <?php if ($appointments->num_rows > 0): ?>
-        <table>
-            <tr>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Doctor</th>
-                <th>Specialization</th>
-                <th>Phone</th>
-                <th>Hospital</th>
-                <th>Address</th>
-            </tr>
-            <?php while ($app = $appointments->fetch_assoc()): ?>
-            <tr>
-                <td><?php echo htmlspecialchars($app['Date']); ?></td>
-                <td><?php echo htmlspecialchars(substr($app['Time'],0,5)); ?></td>
-                <td><?php echo htmlspecialchars($app['DoctorName']); ?></td>
-                <td><?php echo htmlspecialchars($app['Specialization']); ?></td>
-                <td><?php echo htmlspecialchars($app['DoctorPhone']); ?></td>
-                <td><?php echo htmlspecialchars($app['HospitalName']); ?></td>
-                <td><?php echo htmlspecialchars($app['HospitalAddress']); ?></td>
-            </tr>
-            <?php endwhile; ?>
-        </table>
-    <?php else: ?>
-        <p>No upcoming appointments found.</p>
-    <?php endif; ?>
-</div>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

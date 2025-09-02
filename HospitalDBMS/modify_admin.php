@@ -11,13 +11,18 @@ if (!isset($_SESSION['pid']) || $_SESSION['role'] != "admin") {
 $admin_id = $_SESSION['pid'];
 
 // Fetch current admin info
-$stmt = $conn->prepare("SELECT p.email, p.Phone, p.password, s.shift FROM person p JOIN staff s ON p.PID = s.PID WHERE p.PID = ?");
+$stmt = $conn->prepare("
+    SELECT p.name, p.email, p.Phone, p.password, s.shift 
+    FROM person p 
+    JOIN staff s ON p.PID = s.PID 
+    WHERE p.PID = ?");
 $stmt->bind_param("s", $admin_id);
 $stmt->execute();
 $result = $stmt->get_result();
 if (!$row = $result->fetch_assoc()) {
     die("Admin not found.");
 }
+$current_name = $row['name'];
 $current_email = $row['email'];
 $current_phone = $row['Phone'];
 $current_password = $row['password'];
@@ -43,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->execute();
     $stmt->close();
 
-    $message = " Admin info updated successfully!";
+    $message = "Admin info updated successfully!";
 }
 ?>
 
@@ -51,64 +56,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html>
 <head>
     <title>Modify Admin Info</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; margin: 0; }
+        body { padding: 20px; background-color: #f8f9fa; }
+        .card { padding: 20px; border-radius: 10px; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .header a {
-            background: #6c757d;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            text-decoration: none;
-        }
-        .header a:hover { background: #5a6268; }
-        form { max-width: 500px; margin: auto; display: flex; flex-direction: column; gap: 12px; }
-        label { font-weight: bold; }
-        input, select {
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            width: 100%;
-        }
-        button {
-            background: #007BFF;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        button:hover { background: #0056b3; }
+        .header a { text-decoration: none; }
         .message { color: green; font-weight: bold; margin-bottom: 10px; text-align: center; }
     </style>
 </head>
 <body>
+<div class="container">
+    <div class="header">
+        <h2>Modify Admin Info</h2>
+        <a href="staff.php" class="btn btn-secondary">Back</a>
+    </div>
 
-<div class="header">
-    <h2>Modify Admin Info</h2>
-    <a href="staff.php">⬅ Back</a>
+    <?php if (!empty($message)) echo "<div class='message'>$message</div>"; ?>
+
+    <div class="row g-4">
+        <!-- Left: Current Info -->
+        <div class="col-md-5">
+            <div class="card bg-light">
+                <h5>Current Info</h5>
+                <p><strong>Name:</strong> <?php echo htmlspecialchars($current_name); ?></p>
+                <p><strong>Email:</strong> <?php echo htmlspecialchars($current_email); ?></p>
+                <p><strong>Phone:</strong> <?php echo htmlspecialchars($current_phone); ?></p>
+                <p><strong>Shift:</strong> <?php echo htmlspecialchars($current_shift); ?></p>
+            </div>
+        </div>
+
+        <!-- Right: Form to Modify -->
+        <div class="col-md-7">
+            <div class="card">
+                <form method="post">
+                    <div class="mb-3">
+                        <label>Email</label>
+                        <input type="email" name="email" class="form-control" value="<?php echo htmlspecialchars($current_email); ?>" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Phone</label>
+                        <input type="text" name="phone" class="form-control" value="<?php echo htmlspecialchars($current_phone); ?>" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Password</label>
+                        <input type="password" name="password" class="form-control" value="<?php echo htmlspecialchars($current_password); ?>" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Shift</label>
+                        <select name="shift" class="form-select" required>
+                            <option value="Morning" <?php if($current_shift=="Morning") echo "selected"; ?>>Morning</option>
+                            <option value="Evening" <?php if($current_shift=="Evening") echo "selected"; ?>>Evening</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Update Info</button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
-
-<?php if (!empty($message)) echo "<div class='message'>$message</div>"; ?>
-
-<form method="post">
-    <label>Email</label>
-    <input type="email" name="email" value="<?php echo htmlspecialchars($current_email); ?>" required>
-
-    <label>Phone</label>
-    <input type="text" name="phone" value="<?php echo htmlspecialchars($current_phone); ?>" required>
-
-    <label>Password</label>
-    <input type="password" name="password" value="<?php echo htmlspecialchars($current_password); ?>" required>
-
-    <label>Shift</label>
-    <select name="shift" required>
-        <option value="Morning" <?php if($current_shift=="Morning") echo "selected"; ?>>Morning</option>
-        <option value="Evening" <?php if($current_shift=="Evening") echo "selected"; ?>>Evening</option>
-    </select>
-
-    <button type="submit"> Update Info</button>
-</form>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

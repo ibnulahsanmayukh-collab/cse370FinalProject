@@ -8,20 +8,16 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] != "admin") {
     exit();
 }
 
-// Helper functions for month/year
+// Helper dates
 $prev_month_start = date("Y-m-01", strtotime("first day of last month"));
 $prev_month_end = date("Y-m-t", strtotime("last day of last month"));
 $this_month_start = date("Y-m-01");
 $this_month_end = date("Y-m-t");
 
 // Fetch all hospitals
-$hospitals_result = $conn->query("SELECT HospitalID, Name FROM hospital");
-$hospitals = [];
-while ($h = $hospitals_result->fetch_assoc()) {
-    $hospitals[] = $h;
-}
+$hospitals = $conn->query("SELECT HospitalID, Name FROM hospital");
 
-// Initialize totals
+// Totals
 $total_patients_prev = 0;
 $total_patients_this = 0;
 $total_patients_all = 0;
@@ -29,82 +25,28 @@ $total_earning_prev = 0;
 $total_earning_this = 0;
 $total_earning_all = 0;
 
-// Prepare hospital analytics data
-$analytics = [];
+// Function to calculate earnings for a single appointment
+function calc_earning($conn, $appid, $doctorid, $hasInsurance) {
+    // Doctor fee
+    $stmt = $conn->prepare("SELECT COUNT(*) as degree_count FROM doctordegree WHERE PID=?");
+    $stmt->bind_param("s", $doctorid);
+    $stmt->execute();
+    $degcount = $stmt->get_result()->fetch_assoc()['degree_count'];
+    $stmt->close();
+    $doctor_fee = $degcount * 200;
 
-foreach ($hospitals as $h) {
-    $hid = $h['HospitalID'];
+    // Diagnosis fee
+    $stmt = $conn->prepare("SELECT COUNT(*) as diag_count FROM app_diag WHERE App_ID=?");
+    $stmt->bind_param("s", $appid);
+    $stmt->execute();
+    $diagcount = $stmt->get_result()->fetch_assoc()['diag_count'];
+    $stmt->close();
+    $diagnosis_fee = $diagcount * 100;
 
-    $periods = [
-        'prev' => [$prev_month_start, $prev_month_end],
-        'this' => [$this_month_start, $this_month_end],
-        'all'  => [null, null]
-    ];
+    $total_before_insurance = $doctor_fee + $diagnosis_fee;
+    $total_after_insurance = $hasInsurance ? $total_before_insurance * 0.75 : $total_before_insurance;
 
-    $patients = ['prev'=>0, 'this'=>0, 'all'=>0];
-    $earning = ['prev'=>0, 'this'=>0, 'all'=>0];
-
-    foreach ($periods as $key => $dates) {
-        $date_condition = ($dates[0] && $dates[1]) ? "AND a.Date BETWEEN '{$dates[0]}' AND '{$dates[1]}'" : "";
-
-        $sql = "
-            SELECT a.App_ID, doc.PID as DoctorID
-            FROM appointment a
-            JOIN doctor doc ON a.Doctor_ID = doc.PID
-            JOIN staff s ON doc.PID = s.PID
-            WHERE s.hospital_id = ? AND a.Status='Complete' $date_condition
-        ";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("s", $hid);
-        $stmt->execute();
-        $apps_result = $stmt->get_result();
-
-        $patients[$key] = $apps_result->num_rows;
-
-        while ($app = $apps_result->fetch_assoc()) {
-            $appid = $app['App_ID'];
-            $doctorid = $app['DoctorID'];
-
-            // Check if bill is paid
-            $bill_stmt = $conn->prepare("SELECT COUNT(*) as paidcount FROM bill WHERE App_ID=? AND Status='Paid'");
-            $bill_stmt->bind_param("s", $appid);
-            $bill_stmt->execute();
-            $paidcount = $bill_stmt->get_result()->fetch_assoc()['paidcount'];
-            $bill_stmt->close();
-
-            if ($paidcount > 0) {
-                // Count diagnoses
-                $diag_stmt = $conn->prepare("SELECT COUNT(*) as diagcount FROM app_diag WHERE App_ID=?");
-                $diag_stmt->bind_param("s", $appid);
-                $diag_stmt->execute();
-                $diagcount = $diag_stmt->get_result()->fetch_assoc()['diagcount'];
-                $diag_stmt->close();
-
-                // Count doctor degrees
-                $deg_stmt = $conn->prepare("SELECT COUNT(*) as degcount FROM doctordegree WHERE PID=?");
-                $deg_stmt->bind_param("s", $doctorid);
-                $deg_stmt->execute();
-                $degcount = $deg_stmt->get_result()->fetch_assoc()['degcount'];
-                $deg_stmt->close();
-
-                $earning[$key] += ($diagcount*100 + $degcount*200);
-            }
-        }
-
-        $stmt->close();
-
-        // Add to totals
-        if ($key == 'prev') { $total_patients_prev += $patients[$key]; $total_earning_prev += $earning[$key]; }
-        if ($key == 'this') { $total_patients_this += $patients[$key]; $total_earning_this += $earning[$key]; }
-        if ($key == 'all') { $total_patients_all += $patients[$key]; $total_earning_all += $earning[$key]; }
-    }
-
-    $analytics[] = [
-        'HospitalID' => $h['HospitalID'],
-        'HospitalName' => $h['Name'],
-        'patients' => $patients,
-        'earning' => $earning
-    ];
+    return $total_after_insurance;
 }
 ?>
 <!DOCTYPE html>
@@ -114,10 +56,7 @@ foreach ($hospitals as $h) {
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background: #f5f6fa; }
         .header { margin-bottom: 20px; }
-        .back-btn {
-            background: #6c757d; color: white; padding: 8px 12px;
-            border-radius: 6px; text-decoration: none;
-        }
+        .back-btn { background: #6c757d; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; }
         .back-btn:hover { background: #5a6268; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
@@ -128,7 +67,7 @@ foreach ($hospitals as $h) {
 <body>
 
 <div class="header">
-    <a href="admin.php" class="back-btn">← Back</a>
+    <a href="admin.php" class="back-btn"> Back</a>
     <h2>Hospital Analytics</h2>
 </div>
 
@@ -144,28 +83,72 @@ foreach ($hospitals as $h) {
         <th>Total Earning (All Time)</th>
     </tr>
 
-    <?php foreach ($analytics as $row): ?>
-    <tr>
-        <td><?= $row['HospitalID']; ?></td>
-        <td><?= $row['HospitalName']; ?></td>
-        <td><?= $row['patients']['prev']; ?></td>
-        <td><?= $row['patients']['this']; ?></td>
-        <td><?= $row['patients']['all']; ?></td>
-        <td><?= $row['earning']['prev']; ?></td>
-        <td><?= $row['earning']['this']; ?></td>
-        <td><?= $row['earning']['all']; ?></td>
-    </tr>
-    <?php endforeach; ?>
+<?php
+while ($h = $hospitals->fetch_assoc()) {
+    $hid = $h['HospitalID'];
+
+    $periods = [
+        'prev' => [$prev_month_start, $prev_month_end],
+        'this' => [$this_month_start, $this_month_end],
+        'all'  => [null, null]
+    ];
+
+    $patients = ['prev'=>0, 'this'=>0, 'all'=>0];
+    $earning = ['prev'=>0, 'this'=>0, 'all'=>0];
+
+    foreach ($periods as $key => $dates) {
+        $date_condition = ($dates[0] && $dates[1]) ? "AND a.Date BETWEEN '{$dates[0]}' AND '{$dates[1]}'" : "";
+
+        // Fetch all completed appointments for hospital
+        $sql = "
+            SELECT a.App_ID, a.Patient_ID, d.PID as DoctorID, p.HasInsurance
+            FROM appointment a
+            JOIN doctor d ON a.Doctor_ID = d.PID
+            JOIN staff s ON d.PID = s.PID
+            JOIN patient p ON a.Patient_ID = p.PID
+            WHERE s.hospital_id = ? AND a.Status='Complete' $date_condition
+        ";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $hid);
+        $stmt->execute();
+        $apps_result = $stmt->get_result();
+
+        $patients[$key] = $apps_result->num_rows;
+
+        while ($app = $apps_result->fetch_assoc()) {
+            $earning[$key] += calc_earning($conn, $app['App_ID'], $app['DoctorID'], $app['HasInsurance']);
+        }
+
+        $stmt->close();
+
+        // Add to totals
+        if ($key == 'prev') { $total_patients_prev += $patients[$key]; $total_earning_prev += $earning[$key]; }
+        if ($key == 'this') { $total_patients_this += $patients[$key]; $total_earning_this += $earning[$key]; }
+        if ($key == 'all') { $total_patients_all += $patients[$key]; $total_earning_all += $earning[$key]; }
+    }
+
+    echo "<tr>
+        <td>{$h['HospitalID']}</td>
+        <td>{$h['Name']}</td>
+        <td>{$patients['prev']}</td>
+        <td>{$patients['this']}</td>
+        <td>{$patients['all']}</td>
+        <td>".number_format($earning['prev'],2)."</td>
+        <td>".number_format($earning['this'],2)."</td>
+        <td>".number_format($earning['all'],2)."</td>
+    </tr>";
+}
+?>
 
     <tfoot>
         <tr>
             <td colspan="2">Total for All Hospitals</td>
-            <td><?= $total_patients_prev; ?></td>
-            <td><?= $total_patients_this; ?></td>
-            <td><?= $total_patients_all; ?></td>
-            <td><?= $total_earning_prev; ?></td>
-            <td><?= $total_earning_this; ?></td>
-            <td><?= $total_earning_all; ?></td>
+            <td><?php echo $total_patients_prev; ?></td>
+            <td><?php echo $total_patients_this; ?></td>
+            <td><?php echo $total_patients_all; ?></td>
+            <td><?php echo number_format($total_earning_prev,2); ?></td>
+            <td><?php echo number_format($total_earning_this,2); ?></td>
+            <td><?php echo number_format($total_earning_all,2); ?></td>
         </tr>
     </tfoot>
 </table>

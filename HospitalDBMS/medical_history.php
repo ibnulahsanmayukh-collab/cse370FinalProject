@@ -80,55 +80,56 @@ try {
 <html>
 <head>
     <title>Medical History</title>
-    <style>
-        body { font-family: Arial, sans-serif; }
-        h2 { margin-top: 0; }
-        table { border-collapse: collapse; width: 100%; margin-top: 15px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .buttons { margin: 15px 0; }
-        .buttons a { margin-right: 10px; padding: 8px 12px; text-decoration: none; background: #007BFF; color: white; border-radius: 5px; }
-        .buttons a:hover { background: #0056b3; }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
+<body class="bg-light">
 
-<h2>Medical History of <?php echo htmlspecialchars($patient['Name']); ?> (<?php echo $patient['PID']; ?>)</h2>
+<div class="container py-4">
 
-<div class="buttons">
-    <a href="attend_appointment.php">Back</a>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Medical History of <?php echo htmlspecialchars($patient['Name']); ?> (<?php echo $patient['PID']; ?>)</h2>
+        <a href="attend_appointment.php" class="btn btn-secondary">Back</a>
+    </div>
+
+    <?php if(empty($history)) { ?>
+        <div class="alert alert-info">No completed appointments found for this patient.</div>
+    <?php } else { ?>
+        <?php foreach($history as $app) { ?>
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    Appointment: <?php echo $app['App_ID']; ?> | Date: <?php echo $app['Date']; ?> | Doctor: <?php echo $app['DoctorName']." (".$app['DoctorID'].")"; ?>
+                </div>
+                <div class="card-body">
+
+                    <h5>Diagnosis</h5>
+                    <?php if(empty($app['Diagnosis'])): ?>
+                        <p class="text-muted">No diagnosis recorded.</p>
+                    <?php else: ?>
+                        <ul>
+                            <?php foreach($app['Diagnosis'] as $d): ?>
+                                <li><?php echo htmlspecialchars($d['Diagnosis']); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+
+                    <h5>Prescriptions</h5>
+                    <?php if(empty($app['Prescription'])): ?>
+                        <p class="text-muted">No prescriptions recorded.</p>
+                    <?php else: ?>
+                        <ul>
+                            <?php foreach($app['Prescription'] as $p): ?>
+                                <li><?php echo htmlspecialchars($p['Prescription']); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+
+                </div>
+            </div>
+        <?php } ?>
+    <?php } ?>
+
 </div>
 
-<?php if(empty($history)) { ?>
-    <p>No completed appointments found for this patient.</p>
-<?php } else { ?>
-    <?php foreach($history as $app) { ?>
-        <h3>Appointment: <?php echo $app['App_ID']; ?> | Date: <?php echo $app['Date']; ?> | Doctor: <?php echo $app['DoctorName']." (".$app['DoctorID'].")"; ?></h3>
-
-        <table>
-            <tr>
-                <th>Diagnosis</th>
-            </tr>
-            <?php foreach($app['Diagnosis'] as $d) { ?>
-                <tr>
-                    <td><?php echo htmlspecialchars($d['Diagnosis']); ?></td>
-                </tr>
-            <?php } ?>
-        </table>
-
-        <table>
-            <tr>
-                <th>Prescription</th>
-            </tr>
-            <?php foreach($app['Prescription'] as $p) { ?>
-                <tr>
-                    <td><?php echo htmlspecialchars($p['Prescription']); ?></td>
-                </tr>
-            <?php } ?>
-        </table>
-        <hr>
-    <?php } ?>
-<?php } ?>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

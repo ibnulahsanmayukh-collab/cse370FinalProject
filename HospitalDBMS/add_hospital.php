@@ -32,12 +32,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->bind_param("sssssss", $new_id, $name, $plot, $street, $area, $email, $phone);
 
     if ($stmt->execute()) {
-        $message = "✅ Hospital added successfully!";
+        $message = " Hospital added successfully!";
         // Refresh HospitalID for next entry
         $last_id = intval(substr($new_id, 1));
         $new_id = "H" . str_pad($last_id + 1, 4, "0", STR_PAD_LEFT);
     } else {
-        $message = "❌ Error: " . $stmt->error;
+        $message = " Error: " . $stmt->error;
     }
     $stmt->close();
 }
@@ -82,12 +82,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 
 <div class="header">
-    <a href="javascript:history.back()">⬅ Back</a>
+    <a href="manage_hospital.php"> Back</a>
     <h2>Add Hospital</h2>
 </div>
 
 <?php if (!empty($message)) {
-    $class = strpos($message, "✅") !== false ? "success" : "error";
+    $class = strpos($message, "") !== false ? "success" : "error";
     echo "<div class='message $class'>$message</div>";
 } ?>
 
@@ -113,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <label>Phone</label>
     <input type="text" name="phone" required>
 
-    <button type="submit">➕ Add Hospital</button>
+    <button type="submit"> Add Hospital</button>
 </form>
 
 </body>

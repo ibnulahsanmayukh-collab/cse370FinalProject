@@ -6,7 +6,7 @@ if (isset($_POST['login'])) {
     $pid = $_POST['pid'];
     $password = $_POST['password'];
 
-    $sql = "SELECT pid, password FROM person WHERE PID=? AND password=?";
+    $sql = "SELECT PID, password FROM person WHERE PID=? AND password=?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ss", $pid, $password);
     $stmt->execute();
@@ -22,7 +22,7 @@ if (isset($_POST['login'])) {
         } elseif ($conn->query("SELECT 1 FROM patient WHERE PID='$pid'")->num_rows > 0) {
             $_SESSION['role'] = "patient";
             header("Location: patient.php");
-        } else{
+        } else {
             $_SESSION['role'] = "admin";
             header("Location: admin.php");
         }
@@ -32,11 +32,12 @@ if (isset($_POST['login'])) {
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html>
 <head>
     <title>Login</title>
-    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
 
@@ -64,7 +65,7 @@ if (isset($_POST['login'])) {
           </form>
 
           <div class="text-center mt-3">
-            <a href="index.php" class="btn btn-link">Back</a>
+            <a href="index.php" class="btn btn-primary">Back</a>
           </div>
         </div>
       </div>
@@ -72,6 +73,6 @@ if (isset($_POST['login'])) {
   </div>
 </div>
 
-<script src="js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

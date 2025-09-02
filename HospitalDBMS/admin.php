@@ -2,7 +2,7 @@
 session_start();
 include "dbconnect.php";
 
-// ✅ Ensure logged in
+// Ensure logged in
 if (!isset($_SESSION['pid']) || $_SESSION['role'] != "admin") {
     header("Location: login.php");
     exit();
@@ -10,8 +10,9 @@ if (!isset($_SESSION['pid']) || $_SESSION['role'] != "admin") {
 
 $admin_id = $_SESSION['pid'];
 
-// ✅ Get admin details (must be staff but not doctor)
-$stmt = $conn->prepare("SELECT p.Name, p.PID, h.Name AS HospitalName, h.Plot, h.Street, h.Area
+// Get admin details (staff but not doctor)
+$stmt = $conn->prepare("SELECT p.Name, p.PID, p.DateofBirth, p.email, p.Phone,
+                        h.Name AS HospitalName, h.Plot, h.Street, h.Area, h.email AS HospitalEmail, h.Phone AS HospitalPhone
                         FROM staff s
                         JOIN person p ON s.PID = p.PID
                         JOIN hospital h ON s.hospital_id = h.HospitalID
@@ -31,67 +32,100 @@ if (!$admin) {
 <html>
 <head>
     <title>Admin Dashboard</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; margin: 0; }
-        .header {
-            display: flex;
-            justify-content: flex-end;
-            padding: 10px 20px;
-            background: #f8f9fa;
-            margin: -20px -20px 20px -20px;
-        }
-        .header a {
-            background: #dc3545;
-            color: white;
-            text-decoration: none;
-            padding: 8px 12px;
-            border-radius: 6px;
-        }
-        .header a:hover { background: #a71d2a; }
-
-        h2 { margin-bottom: 10px; }
-        .info { margin-bottom: 20px; }
-
-        .buttons {
-            display: flex;
-            flex-direction: column;
-            max-width: 250px;
-        }
-        .buttons a {
-            margin: 6px 0;
-            padding: 12px;
-            background: #007BFF;
-            color: white;
-            text-decoration: none;
-            border-radius: 6px;
-            text-align: center;
-        }
-        .buttons a:hover { background: #0056b3; }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
+<body class="bg-light">
 
-<div class="header">
-    <a href="logout.php">Logout</a>
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="#">Admin Dashboard</a>
+        <div class="d-flex">
+            <a href="logout.php" class="btn btn-danger">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+
+    <!-- Admin & Hospital Info -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    Admin Information
+                </div>
+                <div class="card-body">
+                    <p><strong>Name:</strong> <?php echo htmlspecialchars($admin['Name']); ?></p>
+                    <p><strong>Admin ID:</strong> <?php echo $admin['PID']; ?></p>
+                    <p><strong>Date of Birth:</strong> <?php echo $admin['DateofBirth']; ?></p>
+                    <p><strong>Email:</strong> <?php echo htmlspecialchars($admin['email']); ?></p>
+                    <p><strong>Phone:</strong> <?php echo htmlspecialchars($admin['Phone']); ?></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mt-3 mt-md-0">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    Hospital Information
+                </div>
+                <div class="card-body">
+                    <p><strong>Name:</strong> <?php echo htmlspecialchars($admin['HospitalName']); ?></p>
+                    <p><strong>Address:</strong> <?php echo htmlspecialchars($admin['Plot'] . ", " . $admin['Street'] . ", " . $admin['Area']); ?></p>
+                    <p><strong>Email:</strong> <?php echo htmlspecialchars($admin['HospitalEmail']); ?></p>
+                    <p><strong>Phone:</strong> <?php echo htmlspecialchars($admin['HospitalPhone']); ?></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Actions -->
+    <h3 class="mb-3">Management Actions</h3>
+    <div class="row g-3">
+        <div class="col-md-3 col-sm-6">
+            <a href="staff.php" class="text-decoration-none">
+                <div class="card shadow-sm text-center h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Staff Management</h5>
+                        <p class="card-text">Add, edit, or remove hospital staff members.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <a href="inventory.php" class="text-decoration-none">
+                <div class="card shadow-sm text-center h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Inventory Management</h5>
+                        <p class="card-text">Manage medicines, equipment, and supplies.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <a href="analytics.php" class="text-decoration-none">
+                <div class="card shadow-sm text-center h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Analytics</h5>
+                        <p class="card-text">View hospital performance and earnings.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <a href="manage_hospital.php" class="text-decoration-none">
+                <div class="card shadow-sm text-center h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Manage Hospital</h5>
+                        <p class="card-text">Update hospital information and details.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
 </div>
 
-<h2>Admin Dashboard</h2>
-
-<div class="info">
-    <h3>Hospital Information</h3>
-    <p><strong><?php echo htmlspecialchars($admin['HospitalName']); ?></strong></p>
-    <p><?php echo htmlspecialchars($admin['Plot'] . ", " . $admin['Street'] . ", " . $admin['Area']); ?></p>
-
-    <h3>Admin Information</h3>
-    <p><?php echo htmlspecialchars($admin['Name']); ?> (<?php echo $admin['PID']; ?>)</p>
-</div>
-
-<div class="buttons">
-    <a href="staff.php">Staff Management</a>
-    <a href="inventory.php">Inventory Management</a>
-    <a href="analytics.php">Analytics</a>
-    <a href="manage_hospital.php">Manage Hospital</a>
-</div>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

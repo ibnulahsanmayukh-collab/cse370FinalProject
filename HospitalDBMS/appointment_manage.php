@@ -2,7 +2,7 @@
 session_start();
 include "dbconnect.php";
 
-// ✅ Ensure patient login
+//  Ensure patient login
 if (!isset($_SESSION['pid']) || $_SESSION['role'] != "patient") {
     header("Location: login.php");
     exit();

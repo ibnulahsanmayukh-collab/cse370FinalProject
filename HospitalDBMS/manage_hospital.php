@@ -19,80 +19,53 @@ $query = "
 ";
 $result = $conn->query($query);
 ?>
+
 <!DOCTYPE html>
 <html>
 <head>
     <title>Manage Hospitals</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; margin: 0; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .header a {
-            background: #6c757d;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            text-decoration: none;
-        }
-        .header a:hover { background: #5a6268; }
-        table { border-collapse: collapse; width: 100%; margin-top: 15px; }
-        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
-        th { background: #f8f9fa; }
-        .actions a {
-            display: inline-block;
-            margin-right: 6px;
-            padding: 6px 10px;
-            background: #007BFF;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-        .actions a:hover { background: #0056b3; }
-        .add-btn {
-            display: inline-block;
-            margin-top: 15px;
-            padding: 10px 14px;
-            background: #28a745;
-            color: white;
-            text-decoration: none;
-            border-radius: 6px;
-        }
-        .add-btn:hover { background: #218838; }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
+<body class="bg-light p-4">
 
-<div class="header">
-    <a href="admin.php">⬅ Back</a>
-    <h2>Manage Hospitals</h2>
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Manage Hospitals</h2>
+        <a href="admin.php" class="btn btn-secondary"> Back</a>
+    </div>
+
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Hospital ID</th>
+                <th>Name</th>
+                <th>Address</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Doctors</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php while ($row = $result->fetch_assoc()): ?>
+            <tr>
+                <td><?php echo htmlspecialchars($row['HospitalID']); ?></td>
+                <td><?php echo htmlspecialchars($row['Name']); ?></td>
+                <td><?php echo htmlspecialchars($row['Plot'] . ", " . $row['Street'] . ", " . $row['Area']); ?></td>
+                <td><?php echo htmlspecialchars($row['email']); ?></td>
+                <td><?php echo htmlspecialchars($row['Phone']); ?></td>
+                <td><?php echo htmlspecialchars($row['DoctorCount']); ?></td>
+                <td>
+                    <a href="modify_hospital.php?id=<?php echo urlencode($row['HospitalID']); ?>" class="btn btn-primary btn-sm">Modify</a>
+                </td>
+            </tr>
+        <?php endwhile; ?>
+        </tbody>
+    </table>
+
+    <a href="add_hospital.php" class="btn btn-success">Add Hospital</a>
 </div>
 
-<table>
-    <tr>
-        <th>Hospital ID</th>
-        <th>Name</th>
-        <th>Address</th>
-        <th>Email</th>
-        <th>Phone</th>
-        <th>Doctors</th>
-        <th>Actions</th>
-    </tr>
-    <?php while ($row = $result->fetch_assoc()) { ?>
-        <tr>
-            <td><?php echo htmlspecialchars($row['HospitalID']); ?></td>
-            <td><?php echo htmlspecialchars($row['Name']); ?></td>
-            <td><?php echo htmlspecialchars($row['Plot'] . ", " . $row['Street'] . ", " . $row['Area']); ?></td>
-            <td><?php echo htmlspecialchars($row['email']); ?></td>
-            <td><?php echo htmlspecialchars($row['Phone']); ?></td>
-            <td><?php echo htmlspecialchars($row['DoctorCount']); ?></td>
-            <td class="actions">
-                <a href="modify_hospital.php?id=<?php echo urlencode($row['HospitalID']); ?>">Modify</a>
-            </td>
-        </tr>
-    <?php } ?>
-</table>
-
-<a href="add_hospital.php" class="add-btn">Add Hospital</a>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
