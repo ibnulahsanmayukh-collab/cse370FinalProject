@@ -29,6 +29,7 @@ $stmt = $conn->prepare("SELECT a.App_ID, a.Date, a.Time, a.Status,
                         JOIN doctor d ON a.Doctor_ID = d.PID
                         JOIN staff s ON d.PID = s.PID
                         JOIN hospital h ON s.hospital_id = h.HospitalID
+                        JOIN person per ON d.PID = per.PID
                         WHERE a.App_ID=? AND a.Doctor_ID=?");
 $stmt->bind_param("ss", $app_id, $doctor_id);
 $stmt->execute();
