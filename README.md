@@ -10,3 +10,12 @@ Instructions:
 9. Go to the import tab and import the hospitaldbms.sql into the database
 10. Go to your browser an go to: http://localhost/hospitaldbms/iindex.php
 You should now be able to access the database
+
+Features:
+Unified Patient Search across hospitals
+
+Doctor Scheduling with conflict checks
+Billing System with insurance integration
+Analytics Dashboard for district health authority
+Inventory Alerts for low stock or expired items
+Role-Based Access Control (Admin, Doctor, Staff)
