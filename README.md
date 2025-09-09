@@ -13,7 +13,8 @@ You should now be able to access the database
 
 Features:
 Unified Patient Search across hospitals
-![Alt text](/screenshots/Screenshot 2025-09-08 213532.png)
+![Unified Patient Search](https://github.com/<username>/<repo>/blob/main/screenshots/Screenshot%202025-09-08%20213532.png?raw=true)
+
 Doctor Scheduling with conflict checks
 Billing System with insurance integration
 Analytics Dashboard for district health authority
