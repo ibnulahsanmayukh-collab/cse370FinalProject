@@ -14,10 +14,13 @@ You should now be able to access the database
 Features:
 Unified Patient Search across hospitals
 ![Unified Patient Search](Screenshots/unifiedsearch.png)
-
-
 Doctor Scheduling with conflict checks
+![Conflict Detection](screenshots/ConflictDetect.png)
 Billing System with insurance integration
+![Billing System](screenshots/Bill.png)
 Analytics Dashboard for district health authority
+![Analytics Dashboard](screenshots/Analytics.png)
 Inventory Alerts for low stock or expired items
+![Inventory Warning](screenshots/inventorywarning.png)
 Role-Based Access Control (Admin, Doctor, Staff)
+
