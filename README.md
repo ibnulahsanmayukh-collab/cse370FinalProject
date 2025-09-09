@@ -13,7 +13,7 @@ You should now be able to access the database
 
 Features:
 Unified Patient Search across hospitals
-![Unified Patient Search](https://github.com/ibnulahsanmayukh-collab/cse370FinalProject/blob/main/screenshots/Screenshot%202025-09-08%20213532.png?raw=true)
+![Unified Patient Search](https://github.com/ibnulahsanmayukh-collab/cse370FinalProject/blob/main/screenshots/unifiedsearch.png?raw=true)
 
 
 Doctor Scheduling with conflict checks
