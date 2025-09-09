@@ -22,5 +22,8 @@ Analytics Dashboard for district health authority
 ![Analytics Dashboard](Screenshots/Analytics.png)
 Inventory Alerts for low stock or expired items
 ![Inventory Warning](Screenshots/inventorywarning.png)
-Role-Based Access Control (Admin, Doctor, Staff)
+Role-Based Access Control (Admin, Doctor, Patient):
+![Admin](Screenshots/admin.png)
+![Doctor](Screenshots/Doctor.png)
+![Patient](Screenshots/Patient.png)
 
