@@ -15,12 +15,12 @@ Features:
 Unified Patient Search across hospitals
 ![Unified Patient Search](Screenshots/unifiedsearch.png)
 Doctor Scheduling with conflict checks
-![Conflict Detection](screenshots/ConflictDetect.png)
+![Conflict Detection](Screenshots/ConflictDetect.png)
 Billing System with insurance integration
-![Billing System](screenshots/Bill.png)
+![Billing System](Screenshots/Bill.png)
 Analytics Dashboard for district health authority
-![Analytics Dashboard](screenshots/Analytics.png)
+![Analytics Dashboard](Screenshots/Analytics.png)
 Inventory Alerts for low stock or expired items
-![Inventory Warning](screenshots/inventorywarning.png)
+![Inventory Warning](Screenshots/inventorywarning.png)
 Role-Based Access Control (Admin, Doctor, Staff)
 
